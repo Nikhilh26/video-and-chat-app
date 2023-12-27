@@ -3,7 +3,6 @@ class PeerService {
     constructor() {
 
         if (!this.peer) {
-
             this.peer = new RTCPeerConnection({
                 iceServers: [
                     {
@@ -12,16 +11,23 @@ class PeerService {
                             "stun:global.stun.twilio.com:3478"
                         ]
                     }
-                ]
-            })
+                ],
+                iceTransportPolicy: 'all' // or 'relay' depending on your network conditions
+            });
+
+            this.dataChannel = this.peer.createDataChannel('text-channel');
+
+            // this.peer.addEventListener('datachannel', (e) => {
+            //     console.log('evoked');
+            //     console.log(e);
+            // })
 
         }
-
     }
 
     async getAns(offer) {
         if (this.peer) {
-            await this.peer.setRemoteDescription(offer);
+            await this.peer.setRemoteDescription(new RTCSessionDescription(offer));
             const ansOffer = await this.peer.createAnswer();
             await this.peer.setLocalDescription(new RTCSessionDescription(ansOffer));
             return ansOffer;
@@ -32,15 +38,13 @@ class PeerService {
         if (this.peer) {
             const offer = await this.peer.createOffer();
             await this.peer.setLocalDescription(new RTCSessionDescription(offer));
-            // await this.peer.setLocalDescription(offer); -> both are equivalent
-            return offer; // why return offer ??
+            return offer;
         }
     }
 
     async setAns(offer) {
         if (this.peer) {
-            console.log(offer);
-            await this.peer.setRemoteDescription(offer);
+            await this.peer.setRemoteDescription(new RTCSessionDescription(offer));
         }
     }
 }
