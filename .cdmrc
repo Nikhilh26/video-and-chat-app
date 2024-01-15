@@ -1,0 +1,5 @@
+terminals: ['cd src/screen/Lobby.js']
+tabs: ['src/screen/Lobby.js', 'README.md']
+playground-view: terminal-editor-browser
+run-button: node $$file
+browser-link: https://codedamn.com
