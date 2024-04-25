@@ -1,0 +1,91 @@
+EventEmitter is a class = require(node:events) (returns an eventemitter class) 
+-> .on is a listener
+-> .emit is a event fire/occur("{event-name}",[args])
+
+2->In the socket.io library upon connection ("connection") event is emitted 
+
+3->connect,connect_error,disconnet are reserved eventName
+
+4->IF EVER IN DOUBT ABOUT STUN,TURN AND TURNS (https://developer.liveswitch.io/liveswitch-server/guides/what-are-stun-turn-and-ice.html)(REFER)
+
+5->Socket.IO is a library built on top of WebSocket . They reduce a lot of implementation work and increase the latency and reduce the throughput 
+
+6->Axios can handle errors where as fetch cant , fetch can only catch errors in parsing . parsing , stringifying not needed in axios 
+
+7->Socket.IO acts as a signaling sever (The server which is used to share ICE candidates and SDP) . Alternative of using signaling server would be either UDP hole punching or 
+  WebSocket(It is better to use socket.io bcz socketio is built on top of websocket)
+   (To find and exchange info we need signaling servers - signaling server in Easy words)
+
+8-> HTTP server can also be used as signaling server but we need long/short polling or any kind of mechanism to maintain the connection
+	(Socket.IO maintains a constant connection ) (Extra_Note->request from client in traditional polling is sent periodically . Long polling client request is held by reciever's server until something is to be shared)
+ 
+9->ICE candidates are used to overcome the challenges posed by network address translation (NAT) and firewalls.
+	(NAT -> it refers to the condition of devices having private ip address . When a device from the local network wants to access a resource on the internet, the router performs 	Network Address Translation. It replaces the private IP address of the device with its own public IP address before forwarding the request to the internet.When the response comes 	back from the internet to the router, the router uses its NAT table to determine which local device to send the response to. It translates the public IP address back to the 	original private IP address.)
+
+10->Our Ice candidates are called local ICE candidates and others are called remote Ice candidates
+
+11->
+
+peerConnection.addEventListener('icecandidate', (event) => {
+  if (event.candidate) {
+    // This block will be executed for each local ICE candidate
+    // You can send the candidate to the signaling server here for exchange with the remote peer
+    sendIceCandidateToSignalingServer(event.candidate);
+  } else {
+    // All local ICE candidates have been gathered
+  }
+});
+
+Here listener is attached to my Ice candidates (Local Ice candidates more specifically) bcz the WebRTC implementation may discover additional network interfaces or addresses over time, leading to the generation of new ICE candidates. This is particularly relevant in scenarios where the device has multiple network interfaces, such as when there are both Wi-Fi and cellular connections.
+
+12 -> ICE is a framework which has STUN and TURN servers . ICE takes all of the complexity and coordinates the management of STUN, TURN, and TURNS to a. optimize the likelihood of connection establishment
+
+13 -> WebRTC is a browser API
+
+14 -> 
+(
+socket.emit('message', "this is a test"); //sending to sender-client only
+
+socket.broadcast.emit('message', "this is a test"); //sending to all clients except sender
+
+socket.broadcast.to('game').emit('message', 'nice game'); //sending to all clients in 'game' room(channel) except sender
+
+socket.to('game').emit('message', 'enjoy the game'); //sending to sender client, only if they are in 'game' room(channel)
+
+socket.broadcast.to(socketid).emit('message', 'for your eyes only'); //sending to individual socketid
+
+io.emit('message', "this is a test"); //sending to all clients, include sender
+
+io.in('game').emit('message', 'cool game'); //sending to all clients in 'game' room(channel), include sender
+
+io.of('myNamespace').emit('message', 'gg'); //sending to all clients in namespace 'myNamespace', include sender
+
+socket.emit(); //send to all connected clients
+
+socket.broadcast.emit(); //send to all connected clients except the one that sent the message
+
+socket.on(); //event listener, can be called on client to execute on server
+
+io.sockets.socket(); //for emiting to specific clients
+
+io.sockets.emit(); //send to all connected clients (same as socket.emit)
+
+io.sockets.on() ; //initial connection from a client.
+)
+
+15 -> Two socket.io-client cannot connect directly either they need an intermediate(like socket.io server) or Webrtc 
+
+16 -> 
+First Sharing (SDP Exchange): The initial SDP exchange (offer and answer) is primarily for negotiating the session parameters, including the types of media (audio, video) and the details of those media streams (codecs, resolutions, etc.). It helps both peers agree on how the communication will be established.
+Second Sharing (Data Exchange): After the initial negotiation, the peers have agreed on the session parameters, and the connection is established. However, during the course of the communication, if you dynamically add or remove tracks (e.g., video or audio), you need to go through the SDP exchange process again to inform the other peer about these changes. This ensures that both peers are aware of the updates in the media streams and can adjust the communication accordingly.
+The negotiation process ensures that both peers agree on the media configuration for the connection.
+
+FRONT-END
+
+1->The navigator.mediaDevices interface in JavaScript is part of the WebRTC API and is commonly used to access and interact with media devices, such as cameras and microphones.
+
+2->RTCPeerConnection.createOffer method gets a SDP (SDP refers to physical config of a device)
+
+3->Using useCallback for every method keeps the reference of a method same across renders
+
+4->By using only sdp we can make a connection within a Network but for Inter-Network connection we need to use ice-servers
