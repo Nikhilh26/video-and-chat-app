@@ -6,7 +6,7 @@ io.on('connection', (socket) => {
     // This event emmited by handleOnSubmit in Lobby (Executed when a user submits the form)
     socket.on('room:join', ({ email, room }) => {
         // This emits events to those who already exists in the room 
-        io.to(room).emit('user:joined', { email, id: socket.id });
+        io.to(room).emit('remoteUser:joined', { email, id: socket.id });
         // Adding the user with email in the room number room
         socket.join(room);
         // This event is redirecting to /room/:id

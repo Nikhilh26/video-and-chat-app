@@ -9,6 +9,7 @@ export default function Lobby() {
     const socket = useSocket();
     const navigate = useNavigate();
     console.log(socket);
+
     function handleOnSubmit(e) {
         e.preventDefault();
         socket.emit('room:join', { email, room });
