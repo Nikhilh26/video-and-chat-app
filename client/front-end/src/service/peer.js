@@ -1,5 +1,7 @@
 class PeerService {
-
+    /**
+     * This constructor initializes dataChannel and RTCPeerConnection
+     */
     constructor() {
 
         if (!this.peer) {
@@ -11,14 +13,16 @@ class PeerService {
                             "stun:global.stun.twilio.com:3478"
                         ]
                     }
-                ],
-                iceTransportPolicy: 'all' // or 'relay' depending on your network conditions
+                ]
             });
 
             this.dataChannel = this.peer.createDataChannel('text-channel');
         }
     }
-
+    // iceTransportPolicy: 'all'
+    /*
+     *  This takes offer from other user sets that offer as its own offer creates a new offer
+     */
     async getAns(offer) {
         if (this.peer) {
             await this.peer.setRemoteDescription(new RTCSessionDescription(offer));
@@ -27,7 +31,9 @@ class PeerService {
             return ansOffer;
         }
     }
-
+    /*
+     * This just generates an offer 
+     */
     async getOffer() {
         if (this.peer) {
             const offer = await this.peer.createOffer();
@@ -36,6 +42,9 @@ class PeerService {
         }
     }
 
+    /*
+     * This takes the offer created by getAns of another user
+     */
     async setAns(offer) {
         if (this.peer) {
             await this.peer.setRemoteDescription(new RTCSessionDescription(offer));

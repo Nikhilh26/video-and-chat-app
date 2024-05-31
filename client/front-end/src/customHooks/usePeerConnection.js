@@ -12,11 +12,17 @@ const usePeerConnection = () => {
 
     const socket = useSocket();
 
+    /* This will be executed for whoever joins first
+     *  Invoked by Backend
+     */
     const handleRemoteUserJoin = ({ email, id }) => {
         setRemoteSocketId(id);
-        console.log(email);
+        // console.log(email);
     };
 
+    /* This is shared to the component via the hook and it is called when call button is clicked(Executed at user who joined first
+     *  This generates Offer and sends that to the other user
+     */
     const handleCallUser = async () => {
 
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).catch((err) => {
@@ -25,11 +31,18 @@ const usePeerConnection = () => {
         setDC(peer.dataChannel);
         setMyStream(stream);
 
-        //console.log("handlecalluser"); //init
         const offer = await peer.getOffer();
+        // console.log(offer);
         socket.emit("user:call", { to: remoteSocketId, offer });
     };
 
+    /* This will be executed for user who joined second
+     * Invoked by backend as event is emitted there  
+     * 
+     * What this does is it generates an offer and sends this to other user(AKA the person who joined first)
+     * Also sets that sets datachannel for that person
+     * Also recieves the offer from user who joined first
+     */
     const handleIncommingCall = async ({ from, offer }) => {
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
@@ -37,53 +50,77 @@ const usePeerConnection = () => {
         });
 
         peer.peer.addEventListener('datachannel', (e) => {
-            console.log('evoked');
+            // console.log('evoked');
+            // console.log(e);
             setDC(e.channel);
         })
 
         areTracksSetForOther = 1;
         setMyStream(stream);
         setRemoteSocketId(from);
-        //console.log('handleIncommingCall'); //reciever
         const ansOffer = await peer.getAns(offer);
+        // console.log(ansOffer)
         socket.emit("call:accepted", { to: from, ansOffer });
     };
 
-    const handleOnAcceptAns = ({ from, ansOffer }) => {
-        //console.log('handleOnAcceptAns');
-        peer.setAns(ansOffer);
+    /*  Executed at User who joined first 
+     *  What this does is that it recieves offer and sets it as its own Remote description
+     *  Trackset adds all of my tracks in my RTCPeer which causes emission of negotiationneeded
+     *  Also this leads to creation of SSRC in the RTP channel  
+     */
+    const handleOnAcceptAns = async ({ from, ansOffer }) => {
+        await peer.setAns(ansOffer);
         trackSet();
     };
 
+    /**
+     * Executed after handlenegotiationneeded
+     */
     const handleNegotiationNeededOffer = async ({ from, offer }) => {
         const ansOffer = await peer.getAns(offer);
-        //console.log('handleNegotiationNeededOffer');
+        // console.log(ansOffer);
         socket.emit('negotiation:final', { to: remoteSocketId, ansOffer });
     };
 
+    /**
+     * Final function executed 
+     * areTracksSetForOther -> this is to avoid infinite loop of
+     * start:receiver -> execute:trackSetting -> trackSet(method executed at user who joined second) -> handlenegotiationneeded -> handleNegotiationNeededOffer -> FInal 
+     */
     const handleNegotiationFinalOffer = async ({ from, ansOffer }) => {
         await peer.setAns(ansOffer);
-        console.log('handleNegotiationFinalOffer');
+        // console.log('handleNegotiationFinalOffer');
         if (!areTracksSetForOther) {
             areTracksSetForOther = 1;
             socket.emit('start:receiver', { to: remoteSocketId });
         }
     };
 
+    /**
+     * Addition of Tracks in my Webrtc object
+     */
     const trackSet = () => {
-        console.log('sett');
+        console.log(myStream);
         for (const track of myStream.getTracks()) {
+            console.log(track);
             peer.peer.addTrack(track, myStream);
         }
     };
 
+    /**
+     * 
+     */
     const handleNegotiationNeeded = async () => {
         const offer = await peer.getOffer();
-        // condition added to avoid the event emitted by datachannel
+        console.log(offer);
+        // this was done to avoid sharing of SD when first SD was created 
         if (remoteSocketId)
             socket.emit("negotiation:needed", { to: remoteSocketId, offer });
     };
 
+    /**
+     * This adds Ice candidate from other user to current user and vice-versa
+     */
     const handleIceCandidateAdd = ({ from, iceCandidate }) => {
         peer.peer.addIceCandidate(new RTCIceCandidate(iceCandidate)).catch((err) => console.log(err));
     }
@@ -105,12 +142,13 @@ const usePeerConnection = () => {
             socket.off('negotiation:needed:offer', handleNegotiationNeededOffer);
             socket.off('negotiation:final:offer', handleNegotiationFinalOffer);
             socket.off('execute:trackSetting', trackSet);
-            socket.off('handleIceCandidateAdd', handleIceCandidateAdd);
+            socket.off('iceCandidate:send', handleIceCandidateAdd);
         };
 
     }, [socket, remoteSocketId, myStream]);
 
     useEffect(() => {
+        // emmited after addition of tracks
         peer.peer.addEventListener('negotiationneeded', handleNegotiationNeeded);
         peer.peer.addEventListener('track', (event) => {
             const remoteStream1 = event.streams;
@@ -126,8 +164,12 @@ const usePeerConnection = () => {
         };
     });
 
+    /*
+     * This is executed at both users as ice candidates can be emitted by any of them ,
+     * these are sent to signalling which redirects these to other user and executes handleIceCandidateAdd 
+     * 
+    */
     const handleOnIceCandidate = (e) => {
-        console.log('recieved');
         if (e.candidate) {
             socket.emit('iceCandidate:recieve', { to: remoteSocketId, iceCandidate: e.candiddate });
         }

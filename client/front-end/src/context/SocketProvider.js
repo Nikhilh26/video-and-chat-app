@@ -16,14 +16,14 @@ export default function SocketProvider(props) {
     const socket = useMemo(() => {
 
         try {
-            return io('http://localhost:8000')
+            return io('localhost:8000')
         } catch (error) {
             console.log(error);
             return null;
         }
     }, []);
 
-    console.log(socket)
+    // console.log(socket)
     //if (socket.connected === false) return (<div>Server Down Try again After Some time</div>)
 
     return (

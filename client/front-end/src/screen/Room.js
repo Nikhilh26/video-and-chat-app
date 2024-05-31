@@ -1,6 +1,7 @@
 import ReactPlayer from 'react-player';
 import '../index.css';
 import usePeerConnection from '../customHooks/usePeerConnection';
+import Chat from './Chat.js'
 
 export default function Room() {
 
@@ -27,7 +28,7 @@ export default function Room() {
                         <button onClick={handleCallUser}>Call</button>
                     }
                 </div>
-
+                {/* 
                 <div>
                     {
                         myStream
@@ -44,8 +45,8 @@ export default function Room() {
                         </div>
                     }
 
-                </div>
-
+                </div> */}
+                {/* 
                 {
                     remoteStream
                     &&
@@ -54,26 +55,17 @@ export default function Room() {
                         <ReactPlayer url={remoteStream}
                             height='100px' width='100px' playing />
                     </div>
-                }
+                } */}
 
             </div>
-        </div>
-    )
-}
 
-/*
-{
+            {
                 dataChannel &&
                 <div>
                     <Chat dataChannel={dataChannel} />
                 </div>
             }
-*/
 
-// To Do
-// Change in Architecture so that i can join with the link
-
-// const handleUpdateDatachanelAndMyStream = (myStream) => {
-//     setDC(peer.dataChannel);
-//     setMyStream(myStream);
-// }
+        </div>
+    )
+}

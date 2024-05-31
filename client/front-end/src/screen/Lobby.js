@@ -8,7 +8,7 @@ export default function Lobby() {
     const [room, setRoom] = useState('');
     const socket = useSocket();
     const navigate = useNavigate();
-    console.log(socket);
+    // console.log(socket);
 
     function handleOnSubmit(e) {
         e.preventDefault();
@@ -55,11 +55,11 @@ export default function Lobby() {
                 />
                 <br />
 
-                <button >Join</button>
+                <button onClick={handleOnSubmit}>Join</button>
 
             </form>
 
-            <button onClick={() => { handleJoinRoom() }}>click</button>
+            {/* <button onClick={() => { handleJoinRoom() }}>click</button> */}
         </div>
     )
 }
